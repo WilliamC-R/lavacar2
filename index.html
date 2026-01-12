@@ -1,0 +1,280 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Lavacar - Agendamento</title>
+  <style>
+    :root {
+      color-scheme: light;
+      font-family: "Inter", "Segoe UI", sans-serif;
+      background: #f6f7fb;
+      color: #1f2933;
+    }
+
+    body {
+      margin: 0;
+      padding: 32px 16px 48px;
+      display: flex;
+      justify-content: center;
+    }
+
+    main {
+      width: min(920px, 100%);
+      background: #ffffff;
+      border-radius: 20px;
+      padding: 32px;
+      box-shadow: 0 20px 60px rgba(15, 23, 42, 0.08);
+      display: grid;
+      gap: 24px;
+    }
+
+    header {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    h1 {
+      font-size: 2rem;
+      margin: 0;
+    }
+
+    p {
+      margin: 0;
+      color: #4b5563;
+    }
+
+    form {
+      display: grid;
+      gap: 20px;
+    }
+
+    .step {
+      padding: 20px;
+      border-radius: 16px;
+      background: #f9fafb;
+      border: 1px solid #e5e7eb;
+      display: grid;
+      gap: 16px;
+    }
+
+    .row {
+      display: grid;
+      gap: 12px;
+      grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+    }
+
+    label {
+      font-weight: 600;
+      font-size: 0.9rem;
+    }
+
+    input,
+    select {
+      width: 100%;
+      padding: 12px 14px;
+      border-radius: 12px;
+      border: 1px solid #d1d5db;
+      font-size: 1rem;
+      background: #ffffff;
+    }
+
+    input:read-only {
+      background: #eef2ff;
+      border-color: #c7d2fe;
+    }
+
+    button {
+      padding: 12px 18px;
+      border: none;
+      border-radius: 12px;
+      background: #2563eb;
+      color: #ffffff;
+      font-size: 1rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: transform 0.15s ease, background 0.15s ease;
+    }
+
+    button:hover {
+      background: #1d4ed8;
+      transform: translateY(-1px);
+    }
+
+    .pill {
+      display: inline-flex;
+      gap: 8px;
+      align-items: center;
+      padding: 6px 12px;
+      border-radius: 999px;
+      background: #e0f2fe;
+      color: #0369a1;
+      font-weight: 600;
+      font-size: 0.85rem;
+    }
+
+    .hidden {
+      display: none;
+    }
+
+    .actions {
+      display: flex;
+      gap: 12px;
+      flex-wrap: wrap;
+    }
+
+    @media (max-width: 600px) {
+      main {
+        padding: 24px;
+      }
+
+      button {
+        width: 100%;
+      }
+    }
+  </style>
+</head>
+<body>
+  <main>
+    <header>
+      <span class="pill">Agendamento rápido</span>
+      <h1>Agende sua lavagem</h1>
+      <p>Informe a placa e conclua o agendamento em poucos cliques.</p>
+    </header>
+
+    <form id="bookingForm">
+      <section class="step">
+        <label for="plate">Placa do veículo</label>
+        <div class="row">
+          <input
+            id="plate"
+            name="plate"
+            placeholder="ABC-1234"
+            required
+            autocomplete="off"
+          />
+          <button type="button" id="checkPlate">Continuar</button>
+        </div>
+        <small id="plateStatus"></small>
+      </section>
+
+      <section class="step hidden" id="customerSection">
+        <strong>Dados do cliente</strong>
+        <div class="row">
+          <div>
+            <label for="owner">Nome do dono</label>
+            <input id="owner" name="owner" placeholder="Nome completo" required />
+          </div>
+          <div>
+            <label for="model">Modelo do veículo</label>
+            <input id="model" name="model" placeholder="Ex: Onix LT 2022" required />
+          </div>
+        </div>
+      </section>
+
+      <section class="step hidden" id="serviceSection">
+        <strong>Detalhes do agendamento</strong>
+        <div class="row">
+          <div>
+            <label for="washType">Tipo de lavagem</label>
+            <select id="washType" name="washType" required>
+              <option value="">Selecione</option>
+              <option value="expressa">Lavagem expressa</option>
+              <option value="completa">Lavagem completa</option>
+              <option value="premium">Lavagem premium</option>
+            </select>
+          </div>
+          <div>
+            <label for="time">Horário</label>
+            <input id="time" name="time" type="time" required />
+          </div>
+          <div>
+            <label for="payment">Forma de pagamento</label>
+            <select id="payment" name="payment" required>
+              <option value="">Selecione</option>
+              <option value="pix">PIX</option>
+              <option value="cartao">Cartão</option>
+              <option value="dinheiro">Dinheiro</option>
+            </select>
+          </div>
+        </div>
+      </section>
+
+      <div class="actions hidden" id="actions">
+        <button type="submit">Confirmar agendamento</button>
+        <button type="reset" id="reset">Limpar</button>
+      </div>
+    </form>
+  </main>
+
+  <script>
+    const mockDatabase = {
+      "ABC-1234": { owner: "João Almeida", model: "HB20 2021" },
+      "DEF-5678": { owner: "Marina Costa", model: "Corolla XEi" },
+      "GHI-9012": { owner: "Carlos Silva", model: "Tracker LT" }
+    };
+
+    const plateInput = document.getElementById("plate");
+    const checkButton = document.getElementById("checkPlate");
+    const plateStatus = document.getElementById("plateStatus");
+    const customerSection = document.getElementById("customerSection");
+    const serviceSection = document.getElementById("serviceSection");
+    const actions = document.getElementById("actions");
+    const ownerInput = document.getElementById("owner");
+    const modelInput = document.getElementById("model");
+
+    const showSections = (isRegistered) => {
+      customerSection.classList.remove("hidden");
+      serviceSection.classList.remove("hidden");
+      actions.classList.remove("hidden");
+
+      ownerInput.readOnly = isRegistered;
+      modelInput.readOnly = isRegistered;
+
+      if (!isRegistered) {
+        ownerInput.value = "";
+        modelInput.value = "";
+      }
+    };
+
+    checkButton.addEventListener("click", () => {
+      const plate = plateInput.value.trim().toUpperCase();
+      if (!plate) {
+        plateStatus.textContent = "Informe uma placa válida.";
+        plateStatus.style.color = "#dc2626";
+        return;
+      }
+
+      plateInput.value = plate;
+      const record = mockDatabase[plate];
+
+      if (record) {
+        plateStatus.textContent = "Pré-cadastro encontrado. Confira os dados abaixo.";
+        plateStatus.style.color = "#2563eb";
+        ownerInput.value = record.owner;
+        modelInput.value = record.model;
+        showSections(true);
+      } else {
+        plateStatus.textContent = "Nenhum pré-cadastro encontrado. Complete os dados.";
+        plateStatus.style.color = "#d97706";
+        showSections(false);
+      }
+    });
+
+    document.getElementById("bookingForm").addEventListener("submit", (event) => {
+      event.preventDefault();
+      alert("Agendamento registrado! Em breve entraremos em contato.");
+    });
+
+    document.getElementById("reset").addEventListener("click", () => {
+      plateStatus.textContent = "";
+      customerSection.classList.add("hidden");
+      serviceSection.classList.add("hidden");
+      actions.classList.add("hidden");
+      ownerInput.readOnly = false;
+      modelInput.readOnly = false;
+    });
+  </script>
+</body>
+</html>
